@@ -1,0 +1,34 @@
+body {
+  background-color: #585191;
+  font-family: 'Josefin Sans', sans-serif;
+}
+
+h1, h2, h3 {
+  /* font-family: 'ZCOOL KuaiLe', cursive; */
+  font-family: 'Josefin Sans', sans-serif;
+}
+
+#main-content {
+  background-color: #fafafa;
+  border-radius: 15px;
+  padding: 75px 0;
+}
+
+.divider {
+  width: 125px;
+  height: 3px;
+  margin: 10px auto 50px;
+  background-color: #F76C5E;
+}
+
+.tile {
+  -webkit-transition: all 1s ease-in-out;
+-moz-transition: all 1s ease-in-out;
+-ms-transition: all 1s ease-in-out;
+-o-transition: all 1s ease-in-out;
+transition: all 1s ease-in-out;
+}
+
+.tile.ghost {
+  opacity: 0;
+}
