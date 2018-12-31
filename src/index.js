@@ -19,9 +19,13 @@ loginForm.addEventListener("submit", e => {
   .then(r => r.json())
   .then(data => {
     currentUser = data.find(user => user.username === username)
-    welcome.classList += " ghost"
-    welcome.remove()
-    postLogin()
+    if (currentUser === undefined) {
+      createUser(username)
+    } else {
+      welcome.classList += " ghost"
+      welcome.remove()
+      postLogin()
+    }
   })
 })
 
@@ -45,6 +49,25 @@ currentTile.addEventListener("click", e => {
 //     console.log(e.target)
 //   }
 // })
+
+function createUser(username) {
+  fetch("http://localhost:3000/api/v1/users", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    },
+    body: JSON.stringify({ username: username })
+  })
+  .then(r => r.json())
+  .then(data => {
+    console.log(data)
+    currentUser = data
+    welcome.classList += " ghost"
+    welcome.remove()
+    postLogin()
+  })
+}
 
 function viewStats(user) {
   currentTile.innerHTML = `
@@ -180,13 +203,15 @@ function loadGame() {
   .then(startGame)
 }
 
+
+
+
 function startGame() {
   currentTile.innerHTML = ""
   //roundCounter = [...currentGame.questions]
   currentGame.questions.forEach(question => {
     return currentTile.innerHTML += renderQuestion(question)
   })
-
 }
 
 function renderQuestion(question) {
@@ -229,3 +254,5 @@ function shuffle(array) {
 function answerQuestion(answer) {
   //console.log("answer:", answer, "id:")
 }
+
+// new branch
