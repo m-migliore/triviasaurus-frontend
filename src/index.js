@@ -11,6 +11,8 @@ let currentGame
 let currentRound
 //let roundCounter
 
+
+// 1. User Login/Signup Form
 loginForm.addEventListener("submit", e => {
   e.preventDefault()
   const username = loginForm.querySelector("#username").value
@@ -29,27 +31,24 @@ loginForm.addEventListener("submit", e => {
   })
 })
 
-currentTile.addEventListener("click", e => {
-  if (e.target.dataset.action === "play") {
-    newGame()
-  } else if (e.target.dataset.action === "stats") {
-    viewStats()
-  } else if (e.target.dataset.action === "start_game") {
-    loadGame()
-  } else if (e.target.dataset.action === "answer") {
-    //const answer = e.target.innerText
-    //answerQuestion(answer)
-    console.log("answer:", e.target.innerText, "id:", e.target.dataset.id);
-  }
-})
+// Post login for user, play game or view stats
+function postLogin() {
+  currentTile.innerHTML = `
+  <div id="user" class="tile">
+    <h1>Welcome ${currentUser.username}</h1>
+    <div class="divider"></div>
+    <div class="row">
+      <div class="col">
+        <button type="button" class="btn btn-primary" data-id="${currentUser.id}" data-action="play">Play Game</button>
+      </div>
+      <div class="col">
+        <button type="button" class="btn btn-primary" data-id="${currentUser.id}" data-action="stats">View Stats</button>
+      </div>
+    </div>
+  </div>`
+}
 
-// document.addEventListener("submit", e => {
-//   if (e.target.dataset.action === "new_game") {
-//     e.preventDefault()
-//     console.log(e.target)
-//   }
-// })
-
+// Creates user if new user
 function createUser(username) {
   fetch("http://localhost:3000/api/v1/users", {
     method: "POST",
@@ -69,6 +68,7 @@ function createUser(username) {
   })
 }
 
+// View Stats For User
 function viewStats(user) {
   currentTile.innerHTML = `
   <div id="user" class="tile">
@@ -92,39 +92,27 @@ function viewStats(user) {
   </div>`
 }
 
-// function postLogin(user) {
-//   currentTile.innerHTML = `
-//   <div id="user" class="tile">
-//     <h1>Welcome ${user.username}</h1>
-//     <div class="divider"></div>
-//     <div class="row">
-//       <div class="col">
-//         <button type="button" class="btn btn-primary" data-id="${user.id}" data-action="play">Play Game</button>
-//       </div>
-//       <div class="col">
-//         <button type="button" class="btn btn-primary" data-id="${user.id}" data-action="stats">View Stats</button>
-//       </div>
-//     </div>
-//   </div>`
-// }
 
-function postLogin() {
-  currentTile.innerHTML = `
-  <div id="user" class="tile">
-    <h1>Welcome ${currentUser.username}</h1>
-    <div class="divider"></div>
-    <div class="row">
-      <div class="col">
-        <button type="button" class="btn btn-primary" data-id="${currentUser.id}" data-action="play">Play Game</button>
-      </div>
-      <div class="col">
-        <button type="button" class="btn btn-primary" data-id="${currentUser.id}" data-action="stats">View Stats</button>
-      </div>
-    </div>
-  </div>`
-}
+// MAIN APPLICATION CLICK HANDLER
+currentTile.addEventListener("click", e => {
+  if (e.target.dataset.action === "play") {
+    newGame()
+  } else if (e.target.dataset.action === "stats") {
+    viewStats()
+  } else if (e.target.dataset.action === "start_game") {
+    addRounds()
+  } else if (e.target.dataset.action === "answer") {
+    //const answer = e.target.innerText
+    //answerQuestion(answer)
+    console.log("answer:", e.target.innerText, "id:", e.target.dataset.id);
+  }
+})
 
+
+// Game Process 1: Render New Game Form
 function newGame() {
+  createGame()
+
   currentTile.innerHTML = `
   <div id="new-game" class="tile">
     <form id="new-game-form" data-action="new_game" data-id="${currentUser.id}">
@@ -173,39 +161,67 @@ function newGame() {
   </div>`
 }
 
-
-function loadGame() {
+// Game Process 2: Take new game form values for create rounds for game
+function addRounds() {
   const questionAmount = currentTile.querySelector("#question-amount").value
   const gameCategory = currentTile.querySelector("#game-category").value
-  console.log(questionAmount)
-  console.log(gameCategory)
 
   fetch(`https://opentdb.com/api.php?amount=${questionAmount}&category=${gameCategory}&type=multiple`)
   .then(r => r.json())
   .then(data => {
-    let questionId = 1
-    const gameQuestions = data.results
-    gameQuestions.forEach(question => {
-      question.id = questionId
-      questionId++
-      console.log(question)
+    //createRounds(data.results)
+    const questionData = data.results
+    questionData.forEach(question => {
+      createRound(question)
     })
-
-    console.log("data", data)
-    currentGame = {
-      user: currentUser,
-      questions: data.results,
-      questionAmount: data.results.length,
-      correct: 0,
-      incorrect: 0
-    }
   })
-  .then(startGame)
+  .then(loadGame)
 }
 
+// Create Game in AR, set currentGame variable
+function createGame() {
+  fetch("http://localhost:3000/api/v1/games", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    },
+    body: JSON.stringify({ user_id: currentUser.id})
+  })
+  .then(r => r.json())
+  .then(data => {
+    currentGame = data
+  })
+}
 
+function createRound(question) {
+  console.log(question.question)
+  fetch("http://localhost:3000/api/v1/rounds", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    },
+    body: JSON.stringify({
+      game_id: currentGame.id,
+      category: question.category,
+      difficulty: question.difficulty,
+      question: question.question,
+      correct_answer: question.correct_answer,
+      incorrect_answer_1: question.incorrect_answers[0],
+      incorrect_answer_2: question.incorrect_answers[1],
+      incorrect_answer_3: question.incorrect_answers[2],
+      correct: false
+    })
+  })
+}
 
+// Game Process 3: Load Game
+function loadGame() {
+  console.log("THIS WILL LOAD SERIALIZED DATA");
+}
 
+// Game Process 4: User can interact with game
 function startGame() {
   currentTile.innerHTML = ""
   //roundCounter = [...currentGame.questions]
@@ -254,5 +270,3 @@ function shuffle(array) {
 function answerQuestion(answer) {
   //console.log("answer:", answer, "id:")
 }
-
-// new branch
