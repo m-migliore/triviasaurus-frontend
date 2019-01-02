@@ -170,11 +170,14 @@ function addRounds() {
     const questionData = data.results
     currentTile.innerHTML = ""
     questionData.forEach(question => {
-      //gameQuestions.push(question)
-      createRound(question)
+      gameQuestions.push(question)
+      //createRound(question)
     })
+    return gameQuestions
   })
-  .then(loadGame)
+  .then(gameQuestions => {
+    loadGame()
+  })
 }
 
 // Create Game in AR, set currentGame variable
@@ -215,21 +218,15 @@ function createRound(question) {
   .then(r => r.json())
   .then(data => {
     currentTile.innerHTML += renderQuestion(data)
+    //gameQuestions.push(data)
   })
 }
 
 // Game Process 3: Load Game
 function loadGame() {
   currentTile.innerHTML = ""
-  console.log("load");
-  //gameQuestions.forEach(question => currentTile.innerHTML += renderQuestion(question))
-
-  fetch(`http://localhost:3000/api/v1/games/${currentGame.id}`)
-  .then(r => r.json())
-  .then(data => {
-    console.log("during load", gameQuestions)
-    //data.rounds.forEach(question => currentTile.innerHTML += renderQuestion(question))
-  })
+  console.log(gameQuestions)
+  gameQuestions.forEach(question => createRound(question))
 }
 
 
