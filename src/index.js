@@ -103,7 +103,7 @@ currentTile.addEventListener("click", e => {
   } else if (e.target.dataset.action === "start_game") {
     addRounds()
   } else if (e.target.dataset.action === "answer") {
-    console.log("answer:", e.target.innerText, "id:", e.target.dataset.id);
+    checkAnswer(e.target.dataset.id, e.target.innerText)
   }
 })
 
@@ -164,14 +164,13 @@ function newGame() {
 function addRounds() {
   const questionAmount = currentTile.querySelector("#question-amount").value
   const gameCategory = currentTile.querySelector("#game-category").value
-  gameQuestions = []
   fetch(`https://opentdb.com/api.php?amount=${questionAmount}&category=${gameCategory}&type=multiple`)
   .then(r => r.json())
   .then(data => {
     const questionData = data.results
     currentTile.innerHTML = ""
     questionData.forEach(question => {
-      gameQuestions.push(question)
+      //gameQuestions.push(question)
       createRound(question)
     })
   })
@@ -213,45 +212,77 @@ function createRound(question) {
       correct: false
     })
   })
-  // .then(r => r.json())
-  // .then(data => {
-  //   currentTile.innerHTML += renderQuestion(data)
-  // })
+  .then(r => r.json())
+  .then(data => {
+    currentTile.innerHTML += renderQuestion(data)
+  })
 }
 
 // Game Process 3: Load Game
 function loadGame() {
   currentTile.innerHTML = ""
-  gameQuestions.forEach(question => currentTile.innerHTML += renderQuestion(question))
+  console.log("load");
+  //gameQuestions.forEach(question => currentTile.innerHTML += renderQuestion(question))
 
-  // fetch(`http://localhost:3000/api/v1/games/${currentGame.id}`)
-  // .then(r => r.json())
-  // .then(data => {
-  //   console.log(data)
-  //   gameQuestions = data.rounds
-  //   gameQuestions.forEach(question => currentTile.innerHTML += renderQuestion(question))
-  // })
+  fetch(`http://localhost:3000/api/v1/games/${currentGame.id}`)
+  .then(r => r.json())
+  .then(data => {
+    console.log("during load", gameQuestions)
+    //data.rounds.forEach(question => currentTile.innerHTML += renderQuestion(question))
+  })
 }
 
 
 // Game Process 4: Answer Questions
-function answerQuestion(roundId) {
+function checkAnswer(roundId, answer) {
+  const question = currentTile.querySelector(`.question[data-id="${roundId}"]`)
   fetch(`http://localhost:3000/api/v1/rounds/${roundId}`)
   .then(r => r.json())
   .then(data => {
-    console.log(data)
-    gameQuestions = data.rounds
-    gameQuestions.forEach(question => currentTile.innerHTML += renderQuestion(question))
+
+    if (data.correct_answer === answer) {
+      alert("Yay")
+      question.style.borderColor = "green"
+      answerQuestion(roundId, answer, true)
+    } else {
+      alert("Nope")
+      question.style.borderColor = "red"
+      answerQuestion(roundId, answer)
+    }
+  })
+}
+
+//specify true if correct when checking answer
+function answerQuestion(roundId, answer, correct=false) {
+  console.log(roundId, answer, correct);
+  fetch(`http://localhost:3000/api/v1/rounds/${roundId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    },
+    body: JSON.stringify({
+      answer: answer,
+      correct: correct
+    })
+  })
+  .then(r => r.json())
+  .then(data => {
+    const question = currentTile.querySelector(`.question[data-id="${data.id}"]`)
+    question.style.display = "none"
   })
 }
 
 function renderQuestion(question) {
   let questionAnswers = []
   questionAnswers.push(question.correct_answer)
-  question.incorrect_answers.forEach(answer => questionAnswers.push(answer))
+  questionAnswers.push(question.incorrect_answer_1)
+  questionAnswers.push(question.incorrect_answer_2)
+  questionAnswers.push(question.incorrect_answer_3)
+  // question.incorrect_answers.forEach(answer => questionAnswers.push(answer))
   shuffle(questionAnswers)
   return `
-    <div class="question">
+    <div class="question" data-id="${question.id}">
       <h3>${question.question}</h3>
       <ul>
         <li data-game_id="${question.game_id}" data-id="${question.id}" data-action="answer">${questionAnswers[0]}</li>

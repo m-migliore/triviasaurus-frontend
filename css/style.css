@@ -35,6 +35,10 @@ transition: all 1s ease-in-out;
 
 
 /********** QUESTIONS **********/
+.question {
+  border: 3px solid transparent;
+}
+
 .question ul {
   list-style: none;
   padding-left: 0;
