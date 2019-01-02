@@ -70,27 +70,35 @@ function createUser(username) {
 }
 
 // View Stats For User
-function viewStats(user) {
-  currentTile.innerHTML = `
-  <div id="user" class="tile">
-    <h1>${currentUser.username}</h1>
-    <div class="divider"></div>
-    <div class="row">
-      <div class="col-md-8">
-        <h2>Stats</h2>
-        <div class="divider"></div>
-        <h4>Correct Percentage</h4>
-        <p>88%</p>
-        <h4>Best Category</h4>
-        <p>Video Games</p>
-        <h4>Worst Category</h4>
-        <p>Music</p>
-      </div>
-      <div class="col-md-4">
-        Sidebar buttons
-      </div>
-    </div>
-  </div>`
+// function viewStats(user) {
+//   currentTile.innerHTML = `
+//   <div id="user" class="tile">
+//     <h1>${currentUser.username}</h1>
+//     <div class="divider"></div>
+//     <div class="row">
+//       <div class="col-md-8">
+//         <h2>Stats</h2>
+//         <div class="divider"></div>
+//         <h4>Correct Percentage</h4>
+//         <p>88%</p>
+//         <h4>Best Category</h4>
+//         <p>Video Games</p>
+//         <h4>Worst Category</h4>
+//         <p>Music</p>
+//       </div>
+//       <div class="col-md-4">
+//         Sidebar buttons
+//       </div>
+//     </div>
+//   </div>`
+// }
+function viewStats() {
+  fetch(`http://localhost:3000/api/v1/users/${currentUser.id}`)
+  .then(r => r.json())
+  .then(data => {
+    currentTile.innerHTML = `${JSON.stringify(data)}`
+  })
+
 }
 
 
@@ -104,6 +112,8 @@ currentTile.addEventListener("click", e => {
     addRounds()
   } else if (e.target.dataset.action === "answer") {
     checkAnswer(e.target.dataset.id, e.target.innerText)
+  } else if (e.target.dataset.action === "play_again") {
+    newGame()
   }
 })
 
@@ -128,7 +138,6 @@ function newGame() {
       <div class="form-group">
         <label for="game-category">Category</label>
         <select class="form-control" id="game-category">
-          <option value="any">Any Category</option>
           <option value="9">General Knowledge</option>
           <option value="10">Entertainment: Books</option>
           <option value="11">Entertainment: Film</option>
@@ -155,7 +164,7 @@ function newGame() {
           <option value="32">Entertainment: Cartoon &amp; Animations</option>
         </select>
       </div>
-      <button type="button" data-action="start_game">Start Game</button>
+      <button type="button" data-action="start_game" class="btn btn-primary">Start Game</button>
     </form>
   </div>`
 }
@@ -171,12 +180,11 @@ function addRounds() {
     currentTile.innerHTML = ""
     questionData.forEach(question => {
       gameQuestions.push(question)
-      //createRound(question)
     })
     return gameQuestions
   })
   .then(gameQuestions => {
-    loadGame()
+    loadRound()
   })
 }
 
@@ -197,6 +205,8 @@ function createGame() {
 }
 
 function createRound(question) {
+  currentTile.innerHTML = ""
+
   fetch("http://localhost:3000/api/v1/rounds", {
     method: "POST",
     headers: {
@@ -218,15 +228,17 @@ function createRound(question) {
   .then(r => r.json())
   .then(data => {
     currentTile.innerHTML += renderQuestion(data)
-    //gameQuestions.push(data)
   })
 }
 
-// Game Process 3: Load Game
-function loadGame() {
+// Game Process 3: Load next round
+function loadRound() {
   currentTile.innerHTML = ""
-  console.log(gameQuestions)
-  gameQuestions.forEach(question => createRound(question))
+  if (gameQuestions.length > 0) {
+    createRound( gameQuestions.pop() )
+  } else {
+    gameResults()
+  }
 }
 
 
@@ -236,16 +248,32 @@ function checkAnswer(roundId, answer) {
   fetch(`http://localhost:3000/api/v1/rounds/${roundId}`)
   .then(r => r.json())
   .then(data => {
-
     if (data.correct_answer === answer) {
-      alert("Yay")
-      question.style.borderColor = "green"
       answerQuestion(roundId, answer, true)
     } else {
-      alert("Nope")
-      question.style.borderColor = "red"
       answerQuestion(roundId, answer)
     }
+  })
+}
+
+
+// Game Process 5: View results
+function gameResults() {
+  fetch(`http://localhost:3000/api/v1/games/${currentGame.id}`)
+  .then(r => r.json())
+  .then(data => {
+    const correctTotal = data.rounds.filter(gameRound => gameRound.correct)
+    const answeredQuestions = data.rounds.map(question => renderAnsweredQuestion(question)).join("")
+    currentTile.innerHTML = `
+    <div id="results" class="tile">
+      <h1>Game Results</h1>
+      <div class="divider"></div>
+      <h2 class="score">${Math.round((correctTotal.length/data.rounds.length) * 100)}%</h2>
+      ${answeredQuestions}
+      <button type="button" class="btn btn-primary" data-action="play_again">Play Again</button>
+      <button type="button" class="btn btn-primary" data-action="stats">View Stats</button>
+    </div>`
+
   })
 }
 
@@ -266,7 +294,7 @@ function answerQuestion(roundId, answer, correct=false) {
   .then(r => r.json())
   .then(data => {
     const question = currentTile.querySelector(`.question[data-id="${data.id}"]`)
-    question.style.display = "none"
+    loadRound()
   })
 }
 
@@ -288,6 +316,26 @@ function renderQuestion(question) {
         <li data-game_id="${question.game_id}" data-id="${question.id}" data-action="answer">${questionAnswers[3]}</li>
       </ul>
     </div>`
+}
+
+function renderAnsweredQuestion(question) {
+  if (question.correct) {
+    return `
+      <div class="question correct" data-id="${question.id}">
+        <h3>${question.question}</h3>
+        <h4>Correct Answer</h4>
+        <p>${question.correct_answer}</p>
+      </div>`
+  } else {
+    return `
+      <div class="question incorrect" data-id="${question.id}">
+        <h3>${question.question}</h3>
+        <h4>Your Answer</h4>
+        <p>${question.answer}</p>
+        <h4>Correct Answer</h4>
+        <p>${question.correct_answer}</p>
+      </div>`
+  }
 }
 
 // Fisher-Yates Shuffle

@@ -3,10 +3,9 @@ body {
   font-family: 'Josefin Sans', sans-serif;
 }
 
-h1, h2, h3 {
-  /* font-family: 'ZCOOL KuaiLe', cursive; */
-  font-family: 'Josefin Sans', sans-serif;
-}
+/* h1, h2, h3 {
+  font-family: 'ZCOOL KuaiLe', cursive;
+} */
 
 #main-content {
   background-color: #fafafa;
@@ -37,6 +36,7 @@ transition: all 1s ease-in-out;
 /********** QUESTIONS **********/
 .question {
   border: 3px solid transparent;
+  margin: 25px;
 }
 
 .question ul {
@@ -46,4 +46,18 @@ transition: all 1s ease-in-out;
 
 .question li {
   padding: 15px;
+  cursor: pointer;
+}
+
+/********* RESULTS *********/
+#results .score {
+  font-size: 45px;
+}
+
+#results .question.correct {
+  border-color: green
+}
+
+#results .question.incorrect {
+  border-color: red
 }
