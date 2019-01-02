@@ -32,3 +32,14 @@ transition: all 1s ease-in-out;
 .tile.ghost {
   opacity: 0;
 }
+
+
+/********** QUESTIONS **********/
+.question ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.question li {
+  padding: 15px;
+}

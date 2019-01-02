@@ -9,6 +9,7 @@ const loginForm = document.getElementById("login-form")
 let currentUser
 let currentGame
 let currentRound
+let gameQuestions = []
 //let roundCounter
 
 
@@ -60,7 +61,7 @@ function createUser(username) {
   })
   .then(r => r.json())
   .then(data => {
-    console.log(data)
+    //console.log(data)
     currentUser = data
     welcome.classList += " ghost"
     welcome.remove()
@@ -102,8 +103,6 @@ currentTile.addEventListener("click", e => {
   } else if (e.target.dataset.action === "start_game") {
     addRounds()
   } else if (e.target.dataset.action === "answer") {
-    //const answer = e.target.innerText
-    //answerQuestion(answer)
     console.log("answer:", e.target.innerText, "id:", e.target.dataset.id);
   }
 })
@@ -165,13 +164,14 @@ function newGame() {
 function addRounds() {
   const questionAmount = currentTile.querySelector("#question-amount").value
   const gameCategory = currentTile.querySelector("#game-category").value
-
+  gameQuestions = []
   fetch(`https://opentdb.com/api.php?amount=${questionAmount}&category=${gameCategory}&type=multiple`)
   .then(r => r.json())
   .then(data => {
-    //createRounds(data.results)
     const questionData = data.results
+    currentTile.innerHTML = ""
     questionData.forEach(question => {
+      gameQuestions.push(question)
       createRound(question)
     })
   })
@@ -195,7 +195,6 @@ function createGame() {
 }
 
 function createRound(question) {
-  console.log(question.question)
   fetch("http://localhost:3000/api/v1/rounds", {
     method: "POST",
     headers: {
@@ -214,19 +213,35 @@ function createRound(question) {
       correct: false
     })
   })
+  // .then(r => r.json())
+  // .then(data => {
+  //   currentTile.innerHTML += renderQuestion(data)
+  // })
 }
 
 // Game Process 3: Load Game
 function loadGame() {
-  console.log("THIS WILL LOAD SERIALIZED DATA");
+  currentTile.innerHTML = ""
+  gameQuestions.forEach(question => currentTile.innerHTML += renderQuestion(question))
+
+  // fetch(`http://localhost:3000/api/v1/games/${currentGame.id}`)
+  // .then(r => r.json())
+  // .then(data => {
+  //   console.log(data)
+  //   gameQuestions = data.rounds
+  //   gameQuestions.forEach(question => currentTile.innerHTML += renderQuestion(question))
+  // })
 }
 
-// Game Process 4: User can interact with game
-function startGame() {
-  currentTile.innerHTML = ""
-  //roundCounter = [...currentGame.questions]
-  currentGame.questions.forEach(question => {
-    return currentTile.innerHTML += renderQuestion(question)
+
+// Game Process 4: Answer Questions
+function answerQuestion(roundId) {
+  fetch(`http://localhost:3000/api/v1/rounds/${roundId}`)
+  .then(r => r.json())
+  .then(data => {
+    console.log(data)
+    gameQuestions = data.rounds
+    gameQuestions.forEach(question => currentTile.innerHTML += renderQuestion(question))
   })
 }
 
@@ -239,10 +254,10 @@ function renderQuestion(question) {
     <div class="question">
       <h3>${question.question}</h3>
       <ul>
-        <button type="button" data-id="${question.id}" data-action="answer">${question.correct_answer}</button>
-        <button type="button" data-id="${question.id}" data-action="answer">${question.incorrect_answers[0]}</button>
-        <button type="button" data-id="${question.id}" data-action="answer">${question.incorrect_answers[1]}</button>
-        <button type="button" data-id="${question.id}" data-action="answer">${question.incorrect_answers[2]}</button>
+        <li data-game_id="${question.game_id}" data-id="${question.id}" data-action="answer">${questionAnswers[0]}</li>
+        <li data-game_id="${question.game_id}" data-id="${question.id}" data-action="answer">${questionAnswers[1]}</li>
+        <li data-game_id="${question.game_id}" data-id="${question.id}" data-action="answer">${questionAnswers[2]}</li>
+        <li data-game_id="${question.game_id}" data-id="${question.id}" data-action="answer">${questionAnswers[3]}</li>
       </ul>
     </div>`
 }
@@ -265,8 +280,4 @@ function shuffle(array) {
   }
 
   return array;
-}
-
-function answerQuestion(answer) {
-  //console.log("answer:", answer, "id:")
 }
