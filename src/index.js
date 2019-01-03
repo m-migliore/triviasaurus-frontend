@@ -19,7 +19,7 @@ currentTile.addEventListener("click", e => {
   if (e.target.dataset.action === "play") {
     newGame()
   } else if (e.target.dataset.action === "stats") {
-    viewStats()
+    viewStats(e.target.dataset.user_id)
   } else if (e.target.dataset.action === "start_game") {
     loadGame()
   } else if (e.target.dataset.action === "answer") {
@@ -51,17 +51,18 @@ loginForm.addEventListener("submit", e => {
 function postLogin() {
   currentTile.innerHTML = `
   <div id="user" class="tile">
+    <img src="img/dino.png" alt="Dino" class="dino">
     <h1>Welcome ${currentUser.username}</h1>
     <div class="divider"></div>
     <div class="row">
       <div class="col">
-        <button type="button" class="btn btn-primary" data-id="${currentUser.id}" data-action="play">Play Game</button>
+        <button type="button" class="btn btn-primary" data-action="play">Play Game</button>
       </div>
       <div class="col">
-        <button type="button" class="btn btn-primary" data-id="${currentUser.id}" data-action="stats">View Stats</button>
+        <button type="button" class="btn btn-primary" data-user_id="${currentUser.id}" data-action="stats">View Stats</button>
       </div>
       <div class="col">
-        <button type="button" class="btn btn-primary" data-id="${currentUser.id}" data-action="leaderboard">View Leaderboard</button>
+        <button type="button" class="btn btn-primary" data-action="leaderboard">View Leaderboard</button>
       </div>
     </div>
   </div>`
@@ -85,8 +86,8 @@ function createUser(username) {
 }
 
 // View Stats For User
-function viewStats() {
-  fetch(`http://localhost:3000/api/v1/users/${currentUser.id}/stats`)
+function viewStats(userId) {
+  fetch(`http://localhost:3000/api/v1/users/${userId}/stats`)
   .then(r => r.json())
   .then(data => {
     const categoryStats = data.categoryStats
@@ -95,11 +96,12 @@ function viewStats() {
 
     currentTile.innerHTML = `
       <div id="user" class="tile">
+        <img src="img/dino.png" alt="Dino" class="dino">
         <h1>${data.username}'s Stats</h1>
         <div class="divider"></div>
         <div class="row">
           <div class="col">
-            <button type="button" class="btn btn-primary" data-action="play">Play Again</button>
+            <button type="button" class="btn btn-primary" data-action="play">Play Game</button>
             <button type="button" class="btn btn-primary" data-action="leaderboard">View Leaderboard</button>
           </div>
         </div>
@@ -107,6 +109,7 @@ function viewStats() {
           <div class="col">
             <div class="stat-box main-total">
               <h2>Total Stats</h2>
+              <div class="divider"></div>
               <ul>
                 <li><span>Total:</span> ${data.totalStats.total}</li>
                 <li><span>Wins:</span> ${data.totalStats.wins}</li>
@@ -143,6 +146,7 @@ function viewStats() {
 
             <div>
               <h2>Category Stats</h2>
+              <div class="divider"></div>
               ${categoryBreakdown}
             </div>
           </div>
@@ -173,6 +177,7 @@ function newGame() {
 
   currentTile.innerHTML = `
   <div id="new-game" class="tile">
+    <img src="img/dino.png" alt="Dino" class="dino">
     <h1>New Game</h1>
     <div class="divider"></div>
     <form id="new-game-form" data-action="new_game" data-id="${currentUser.id}">
@@ -349,12 +354,13 @@ function gameResults() {
     const answeredQuestions = data.rounds.map(question => renderAnsweredQuestion(question)).join("")
     currentTile.innerHTML = `
     <div id="results" class="tile">
+      <img src="img/dino.png" alt="Dino" class="dino">
       <h1>Game Results</h1>
       <div class="divider"></div>
-      <h2 class="score">${Math.round((correctTotal.length/data.rounds.length) * 100)}%</h2>
+      <h2 class="score">${Math.round((correctTotal.length/data.rounds.length) * 100)}<span>%</span></h2>
       ${answeredQuestions}
       <button type="button" class="btn btn-primary" data-action="play">Play Again</button>
-      <button type="button" class="btn btn-primary" data-action="stats">View Stats</button>
+      <button type="button" class="btn btn-primary" data-user_id="${currentUser.id}" data-action="stats">View Stats</button>
     </div>`
 
   })
@@ -391,6 +397,7 @@ function renderQuestion(question, roundCounter) {
   shuffle(questionAnswers)
   return `
     <div class="question" data-id="${question.id}">
+      <img src="img/dino.png" alt="Dino" class="dino">
       <h1>Question ${roundCounter}</h1>
       <div class="divider"></div>
       <h3>${question.question}</h3>
@@ -427,41 +434,49 @@ function renderAnsweredQuestion(question) {
   }
 }
 
-
+// Leaderboard View and Render Rows
 function viewLeaderboard() {
-  currentTile.innerHTML = `
-    <div id="leaderboard" class="tile">
-      <h1>Leaderboard</h1>
-      <div class="divider"></div>
+  fetch("http://localhost:3000/api/v1/users/leaderboard")
+  .then(r => r.json())
+  .then(data => {
+    const userRows = data.map(user => renderLeaderboardRow(user)).join("")
 
-      <button type="button" class="btn btn-primary" data-action="play">New Game</button>
-      <button type="button" class="btn btn-primary" data-action="stats">View Stats</button>
-      
-      <table class="table">
-        <thead>
-          <tr>
-            <th scope="col">Username</th>
-            <th scope="col">Total</th>
-            <th scope="col">Wins</th>
-            <th scope="col">Percentage</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Nazgul</td>
-            <td>40</td>
-            <td>40</td>
-            <td>40%</td>
-          </tr>
-          <tr>
-            <td>Nazgul</td>
-            <td>40</td>
-            <td>40</td>
-            <td>40%</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>`
+    currentTile.innerHTML = `
+      <div id="leaderboard" class="tile">
+        <img src="img/dino.png" alt="Dino" class="dino">
+        <h1>Leaderboard</h1>
+        <div class="divider"></div>
+
+        <button type="button" class="btn btn-primary" data-action="play">New Game</button>
+        <button type="button" class="btn btn-primary" data-user_id="${currentUser.id}" data-action="stats">View Stats</button>
+
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th scope="col">Username</th>
+              <th scope="col">Wins</th>
+              <th scope="col">Total</th>
+              <th scope="col">Percentage</th>
+              <th scope="col">ELO</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${userRows}
+          </tbody>
+        </table>
+      </div>`
+  })
+}
+
+function renderLeaderboardRow(user) {
+  return `
+    <tr>
+      <td><span class="user-link" data-action="stats" data-user_id="${user.id}">${user.username}</span></td>
+      <td>${user.wins}</td>
+      <td>${user.total}</td>
+      <td>${user.winPercentage}%</td>
+      <td>${user.elo}</td>
+    </tr>`
 }
 
 // Fisher-Yates Shuffle
