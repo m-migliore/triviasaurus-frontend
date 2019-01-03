@@ -24,6 +24,8 @@ form label {
 .btn-primary {
   background-color: #F76C5E;
   border-color: #F76C5E;
+  font-size: 1.25rem;
+  padding: .375rem .75rem .21rem;
   -webkit-transition: all .5s ease-in-out;
 -moz-transition: all .5s ease-in-out;
 -ms-transition: all .5s ease-in-out;
@@ -56,6 +58,12 @@ box-shadow: 0 2px 8px 0 rgba(0, 0, 0, .3);
   background-color: #30BCED;
 }
 
+/********* LOGIN ********/
+#error {
+  margin-top: 1rem;
+  color: red;
+}
+
 /********* NEW GAME FORM ********/
 #new-game-form .form-group {
   margin-bottom: 3rem;
@@ -64,7 +72,7 @@ box-shadow: 0 2px 8px 0 rgba(0, 0, 0, .3);
 /********** QUESTIONS **********/
 .question {
   border: 5px solid transparent;
-  margin: 25px;
+  margin: 50px;
   padding: 25px;
 }
 
@@ -89,6 +97,7 @@ box-shadow: 0 2px 8px 0 rgba(0, 0, 0, .3);
 -o-transition: all .25s ease-in-out;
 transition: all .25s ease-in-out;
 }
+
 
 .question li:hover {
   color: #F76C5E;

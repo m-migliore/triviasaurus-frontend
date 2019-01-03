@@ -33,17 +33,22 @@ currentTile.addEventListener("click", e => {
 loginForm.addEventListener("submit", e => {
   e.preventDefault()
   const username = loginForm.querySelector("#username").value
+  const error = loginForm.querySelector("#error")
 
-  fetch("http://localhost:3000/api/v1/users")
-  .then(r => r.json())
-  .then(data => {
-    currentUser = data.find(user => user.username === username)
-    if (currentUser === undefined) {
-      createUser(username)
-    } else {
-      postLogin()
-    }
-  })
+  if (username === "") {
+    error.innerText = "Please enter a username"
+  } else {
+    fetch("http://localhost:3000/api/v1/users")
+    .then(r => r.json())
+    .then(data => {
+      currentUser = data.find(user => user.username === username)
+      if (currentUser === undefined) {
+        createUser(username)
+      } else {
+        postLogin()
+      }
+    })
+  }
 })
 
 
@@ -56,10 +61,10 @@ function postLogin() {
     <div class="divider"></div>
     <div class="row">
       <div class="col">
-        <button type="button" class="btn btn-primary" data-action="play">Play Game</button>
+        <button type="button" class="btn btn-primary" data-user_id="${currentUser.id}" data-action="stats">View Stats</button>
       </div>
       <div class="col">
-        <button type="button" class="btn btn-primary" data-user_id="${currentUser.id}" data-action="stats">View Stats</button>
+        <button type="button" class="btn btn-primary" data-action="play">Play Game</button>
       </div>
       <div class="col">
         <button type="button" class="btn btn-primary" data-action="leaderboard">View Leaderboard</button>
