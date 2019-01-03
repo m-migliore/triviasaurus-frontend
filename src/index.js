@@ -10,8 +10,24 @@ let currentUser
 let currentGame
 let currentRound
 let gameQuestions = []
-//let roundCounter
+let streak = 0
+let roundCounter = 1
 
+
+// MAIN APPLICATION CLICK HANDLER
+currentTile.addEventListener("click", e => {
+  if (e.target.dataset.action === "play") {
+    newGame()
+  } else if (e.target.dataset.action === "stats") {
+    viewStats()
+  } else if (e.target.dataset.action === "start_game") {
+    loadGame()
+  } else if (e.target.dataset.action === "answer") {
+    checkAnswer(e.target.dataset.id, e.target.innerText)
+  } else if (e.target.dataset.action === "leaderboard") {
+    viewLeaderboard()
+  }
+})
 
 // 1. User Login/Signup Form
 loginForm.addEventListener("submit", e => {
@@ -25,12 +41,11 @@ loginForm.addEventListener("submit", e => {
     if (currentUser === undefined) {
       createUser(username)
     } else {
-      welcome.classList += " ghost"
-      welcome.remove()
       postLogin()
     }
   })
 })
+
 
 // Post login for user, play game or view stats
 function postLogin() {
@@ -44,6 +59,9 @@ function postLogin() {
       </div>
       <div class="col">
         <button type="button" class="btn btn-primary" data-id="${currentUser.id}" data-action="stats">View Stats</button>
+      </div>
+      <div class="col">
+        <button type="button" class="btn btn-primary" data-id="${currentUser.id}" data-action="leaderboard">View Leaderboard</button>
       </div>
     </div>
   </div>`
@@ -61,69 +79,102 @@ function createUser(username) {
   })
   .then(r => r.json())
   .then(data => {
-    //console.log(data)
     currentUser = data
-    welcome.classList += " ghost"
-    welcome.remove()
     postLogin()
   })
 }
 
 // View Stats For User
-// function viewStats(user) {
-//   currentTile.innerHTML = `
-//   <div id="user" class="tile">
-//     <h1>${currentUser.username}</h1>
-//     <div class="divider"></div>
-//     <div class="row">
-//       <div class="col-md-8">
-//         <h2>Stats</h2>
-//         <div class="divider"></div>
-//         <h4>Correct Percentage</h4>
-//         <p>88%</p>
-//         <h4>Best Category</h4>
-//         <p>Video Games</p>
-//         <h4>Worst Category</h4>
-//         <p>Music</p>
-//       </div>
-//       <div class="col-md-4">
-//         Sidebar buttons
-//       </div>
-//     </div>
-//   </div>`
-// }
 function viewStats() {
-  fetch(`http://localhost:3000/api/v1/users/${currentUser.id}`)
+  fetch(`http://localhost:3000/api/v1/users/${currentUser.id}/stats`)
   .then(r => r.json())
   .then(data => {
-    currentTile.innerHTML = `${JSON.stringify(data)}`
+    const categoryStats = data.categoryStats
+    const playedCategories = Object.keys(categoryStats)
+    const categoryBreakdown = playedCategories.map(category => renderCategoryStats(category, categoryStats)).join("")
+
+    currentTile.innerHTML = `
+      <div id="user" class="tile">
+        <h1>${data.username}'s Stats</h1>
+        <div class="divider"></div>
+        <div class="row">
+          <div class="col">
+            <button type="button" class="btn btn-primary" data-action="play">Play Again</button>
+            <button type="button" class="btn btn-primary" data-action="leaderboard">View Leaderboard</button>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <div class="stat-box main-total">
+              <h2>Total Stats</h2>
+              <ul>
+                <li><span>Total:</span> ${data.totalStats.total}</li>
+                <li><span>Wins:</span> ${data.totalStats.wins}</li>
+                <li><span>Win Percentage:</span> ${data.totalStats.winPercentage}%</li>
+              </ul>
+            </div>
+
+            <div class="stat-box">
+              <h4>Easy Breakdown</h4>
+              <ul>
+                <li><span>Total:</span> ${data.totalStats.easyTotal}</li>
+                <li><span>Wins:</span> ${data.totalStats.easyWins}</li>
+                <li><span>Win Percentage:</span> ${data.totalStats.easyPercentage}%</li>
+              </ul>
+            </div>
+
+            <div class="stat-box">
+              <h4>Medium Breakdown</h4>
+              <ul>
+                <li><span>Total:</span> ${data.totalStats.mediumTotal}</li>
+                <li><span>Wins:</span> ${data.totalStats.mediumWins}</li>
+                <li><span>Win Percentage:</span> ${data.totalStats.mediumPercentage}%</li>
+              </ul>
+            </div>
+
+            <div class="stat-box">
+              <h4>Hard Breakdown</h4>
+              <ul>
+                <li><span>Total:</span> ${data.totalStats.hardTotal}</li>
+                <li><span>Wins:</span> ${data.totalStats.hardWins}</li>
+                <li><span>Win Percentage:</span> ${data.totalStats.hardPercentage}%</li>
+              </ul>
+            </div>
+
+            <div>
+              <h2>Category Stats</h2>
+              ${categoryBreakdown}
+            </div>
+          </div>
+        </div>
+      </div>`
   })
 
 }
 
-
-// MAIN APPLICATION CLICK HANDLER
-currentTile.addEventListener("click", e => {
-  if (e.target.dataset.action === "play") {
-    newGame()
-  } else if (e.target.dataset.action === "stats") {
-    viewStats()
-  } else if (e.target.dataset.action === "start_game") {
-    addRounds()
-  } else if (e.target.dataset.action === "answer") {
-    checkAnswer(e.target.dataset.id, e.target.innerText)
-  } else if (e.target.dataset.action === "play_again") {
-    newGame()
-  }
-})
+//takes a category from playedCategories, gets values from categoryStats
+function renderCategoryStats(category, categoryStats) {
+  return `
+    <div class="stat-box">
+      <h4>${category}</h4>
+      <ul>
+        <li><span>Total:</span> ${categoryStats[category].total}</li>
+        <li><span>Wins:</span> ${categoryStats[category].wins}</li>
+        <li><span>Win Percentage:</span> ${categoryStats[category].winPercentage}%</li>
+      </ul>
+    </div>`
+}
 
 
 // Game Process 1: Render New Game Form
 function newGame() {
-  createGame()
+  //createGame()
+  roundCounter = 1
 
   currentTile.innerHTML = `
   <div id="new-game" class="tile">
+    <h1>New Game</h1>
+    <div class="divider"></div>
     <form id="new-game-form" data-action="new_game" data-id="${currentUser.id}">
       <div class="form-group">
         <label for="question-amount">Question Amount</label>
@@ -136,8 +187,18 @@ function newGame() {
         </select>
       </div>
       <div class="form-group">
+        <label for="game-difficulty">Difficulty</label>
+        <select class="form-control" id="game-difficulty">
+          <option value="any">Any Difficulty</option>
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+      </div>
+      <div class="form-group">
         <label for="game-category">Category</label>
         <select class="form-control" id="game-category">
+          <option value="any">Any Category</option>
           <option value="9">General Knowledge</option>
           <option value="10">Entertainment: Books</option>
           <option value="11">Entertainment: Film</option>
@@ -169,11 +230,32 @@ function newGame() {
   </div>`
 }
 
+function loadGame() {
+  createGame()
+  addRounds()
+}
+
 // Game Process 2: Take new game form values for create rounds for game
 function addRounds() {
   const questionAmount = currentTile.querySelector("#question-amount").value
-  const gameCategory = currentTile.querySelector("#game-category").value
-  fetch(`https://opentdb.com/api.php?amount=${questionAmount}&category=${gameCategory}&type=multiple`)
+  const gameDifficultyValue = currentTile.querySelector("#game-difficulty").value
+  let gameDifficulty
+  const gameCategoryValue = currentTile.querySelector("#game-category").value
+  let gameCategory
+
+  if (gameDifficultyValue === "any") {
+    gameDifficulty = ""
+  } else {
+    gameDifficulty = `&difficulty=${gameDifficultyValue}`
+  }
+
+  if (gameCategoryValue === "any") {
+    gameCategory = ""
+  } else {
+    gameCategory = `&category=${gameCategoryValue}`
+  }
+
+  fetch(`https://opentdb.com/api.php?amount=${questionAmount}&type=multiple${gameDifficulty}${gameCategory}`)
   .then(r => r.json())
   .then(data => {
     const questionData = data.results
@@ -227,7 +309,8 @@ function createRound(question) {
   })
   .then(r => r.json())
   .then(data => {
-    currentTile.innerHTML += renderQuestion(data)
+    currentTile.innerHTML += renderQuestion(data, roundCounter)
+    roundCounter++
   })
 }
 
@@ -248,7 +331,7 @@ function checkAnswer(roundId, answer) {
   fetch(`http://localhost:3000/api/v1/rounds/${roundId}`)
   .then(r => r.json())
   .then(data => {
-    if (data.correct_answer === answer) {
+    if (data.correct_answer.trim() === answer.trim()) {
       answerQuestion(roundId, answer, true)
     } else {
       answerQuestion(roundId, answer)
@@ -270,7 +353,7 @@ function gameResults() {
       <div class="divider"></div>
       <h2 class="score">${Math.round((correctTotal.length/data.rounds.length) * 100)}%</h2>
       ${answeredQuestions}
-      <button type="button" class="btn btn-primary" data-action="play_again">Play Again</button>
+      <button type="button" class="btn btn-primary" data-action="play">Play Again</button>
       <button type="button" class="btn btn-primary" data-action="stats">View Stats</button>
     </div>`
 
@@ -298,7 +381,7 @@ function answerQuestion(roundId, answer, correct=false) {
   })
 }
 
-function renderQuestion(question) {
+function renderQuestion(question, roundCounter) {
   let questionAnswers = []
   questionAnswers.push(question.correct_answer)
   questionAnswers.push(question.incorrect_answer_1)
@@ -308,6 +391,8 @@ function renderQuestion(question) {
   shuffle(questionAnswers)
   return `
     <div class="question" data-id="${question.id}">
+      <h1>Question ${roundCounter}</h1>
+      <div class="divider"></div>
       <h3>${question.question}</h3>
       <ul>
         <li data-game_id="${question.game_id}" data-id="${question.id}" data-action="answer">${questionAnswers[0]}</li>
@@ -325,6 +410,8 @@ function renderAnsweredQuestion(question) {
         <h3>${question.question}</h3>
         <h4>Correct Answer</h4>
         <p>${question.correct_answer}</p>
+        <h4>Difficulty</h4>
+        <p>${question.difficulty}</p>
       </div>`
   } else {
     return `
@@ -334,26 +421,58 @@ function renderAnsweredQuestion(question) {
         <p>${question.answer}</p>
         <h4>Correct Answer</h4>
         <p>${question.correct_answer}</p>
+        <h4>Difficulty</h4>
+        <p>${question.difficulty}</p>
       </div>`
   }
+}
+
+
+function viewLeaderboard() {
+  currentTile.innerHTML = `
+    <div id="leaderboard" class="tile">
+      <h1>Leaderboard</h1>
+      <div class="divider"></div>
+
+      <button type="button" class="btn btn-primary" data-action="play">New Game</button>
+      <button type="button" class="btn btn-primary" data-action="stats">View Stats</button>
+      
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Username</th>
+            <th scope="col">Total</th>
+            <th scope="col">Wins</th>
+            <th scope="col">Percentage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Nazgul</td>
+            <td>40</td>
+            <td>40</td>
+            <td>40%</td>
+          </tr>
+          <tr>
+            <td>Nazgul</td>
+            <td>40</td>
+            <td>40</td>
+            <td>40%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>`
 }
 
 // Fisher-Yates Shuffle
 function shuffle(array) {
   var currentIndex = array.length, temporaryValue, randomIndex;
-
-  // While there remain elements to shuffle...
   while (0 !== currentIndex) {
-
-    // Pick a remaining element...
     randomIndex = Math.floor(Math.random() * currentIndex);
     currentIndex -= 1;
-
-    // And swap it with the current element.
     temporaryValue = array[currentIndex];
     array[currentIndex] = array[randomIndex];
     array[randomIndex] = temporaryValue;
   }
-
   return array;
 }
