@@ -363,9 +363,18 @@ function gameResults() {
       <h1>Game Results</h1>
       <div class="divider"></div>
       <h2 class="score">${Math.round((correctTotal.length/data.rounds.length) * 100)}<span>%</span></h2>
+      <div class="row">
+        <div class="col">
+          <button type="button" class="btn btn-primary" data-user_id="${currentUser.id}" data-action="stats">View Stats</button>
+        </div>
+        <div class="col">
+          <button type="button" class="btn btn-primary" data-action="play">Play Game</button>
+        </div>
+        <div class="col">
+          <button type="button" class="btn btn-primary" data-action="leaderboard">View Leaderboard</button>
+        </div>
+      </div>
       ${answeredQuestions}
-      <button type="button" class="btn btn-primary" data-action="play">Play Again</button>
-      <button type="button" class="btn btn-primary" data-user_id="${currentUser.id}" data-action="stats">View Stats</button>
     </div>`
 
   })
@@ -452,8 +461,14 @@ function viewLeaderboard() {
         <h1>Leaderboard</h1>
         <div class="divider"></div>
 
-        <button type="button" class="btn btn-primary" data-action="play">New Game</button>
-        <button type="button" class="btn btn-primary" data-user_id="${currentUser.id}" data-action="stats">View Stats</button>
+        <div class="row">
+          <div class="col">
+            <button type="button" class="btn btn-primary" data-user_id="${currentUser.id}" data-action="stats">View Stats</button>
+          </div>
+          <div class="col">
+            <button type="button" class="btn btn-primary" data-action="play">Play Game</button>
+          </div>
+        </div>
 
         <table class="table table-striped">
           <thead>
