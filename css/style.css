@@ -64,6 +64,7 @@ form label {
   background-color: #30BCED;
 }
 
+
 /********* LOGIN ********/
 #error {
   margin-top: 1rem;
@@ -78,8 +79,8 @@ form label {
 /********** QUESTIONS **********/
 .question {
   border: 5px solid transparent;
-  margin: 50px;
-  padding: 25px;
+  margin: 0 50px;
+  padding: 0 25px;
 }
 
 .question h3 {
@@ -123,6 +124,11 @@ form label {
 #results .score span {
   font-size: .5em;
   vertical-align: middle;
+}
+
+#results .question {
+  margin: 50px;
+  padding: 25px;
 }
 
 #results .question h3 {
@@ -176,7 +182,7 @@ form label {
 
 #user .stat-box.main-total li {
   display: inline-block;
-  width: 33%;
+  width: 24%;
   font-size: 1.75rem;
 }
 
@@ -187,6 +193,9 @@ form label {
   border-bottom: 2px solid #F76C5E;
 }
 
+#user table tr th:first-of-type, #user table tr td:first-of-type {
+  text-align: left;
+}
 
 /********* LEADERBOARD ********/
 #leaderboard table {

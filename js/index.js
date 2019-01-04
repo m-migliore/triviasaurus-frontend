@@ -23,7 +23,6 @@ currentTile.addEventListener("click", e => {
   } else if (e.target.dataset.action === "leaderboard") {
     viewLeaderboard("elo")
   } else if (e.target.dataset.action === "switch") {
-    console.log(e.target.dataset.leaderboard)
     viewLeaderboard(e.target.dataset.leaderboard)
   }
 })
@@ -55,7 +54,7 @@ loginForm.addEventListener("submit", e => {
 function postLogin() {
   currentTile.innerHTML = `
   <div id="user" class="tile">
-    <img src="img/dino.png" alt="Dino" class="dino">
+    <img src="img/dino.png" alt="Dino" class="dino animated jello">
     <h1>Welcome ${currentUser.username}</h1>
     <div class="divider"></div>
     <div class="row">
@@ -100,7 +99,7 @@ function viewStats(userId) {
 
     currentTile.innerHTML = `
       <div id="user" class="tile">
-        <img src="img/dino.png" alt="Dino" class="dino">
+        <img src="img/dino.png" alt="Dino" class="dino animated jello">
         <h1>${data.username}'s Stats</h1>
         <div class="divider"></div>
         <div class="row">
@@ -117,43 +116,56 @@ function viewStats(userId) {
               <h2>Total Stats</h2>
               <div class="divider"></div>
               <ul>
-                <li><span>Total:</span> ${data.totalStats.total}</li>
                 <li><span>Wins:</span> ${data.totalStats.wins}</li>
-                <li><span>Win Percentage:</span> ${data.totalStats.winPercentage}%</li>
+                <li><span>Total:</span> ${data.totalStats.total}</li>
+                <li><span>Percentage:</span> ${data.totalStats.winPercentage}%</li>
+                <li><span>ELO:</span> ${data.totalStats.elo}</li>
               </ul>
             </div>
 
             <div class="stat-box">
               <h4>Easy Breakdown</h4>
               <ul>
-                <li><span>Total:</span> ${data.totalStats.easyTotal}</li>
                 <li><span>Wins:</span> ${data.totalStats.easyWins}</li>
-                <li><span>Win Percentage:</span> ${data.totalStats.easyPercentage}%</li>
+                <li><span>Total:</span> ${data.totalStats.easyTotal}</li>
+                <li><span>Percentage:</span> ${data.totalStats.easyPercentage}%</li>
               </ul>
             </div>
 
             <div class="stat-box">
               <h4>Medium Breakdown</h4>
               <ul>
-                <li><span>Total:</span> ${data.totalStats.mediumTotal}</li>
                 <li><span>Wins:</span> ${data.totalStats.mediumWins}</li>
-                <li><span>Win Percentage:</span> ${data.totalStats.mediumPercentage}%</li>
+                <li><span>Total:</span> ${data.totalStats.mediumTotal}</li>
+                <li><span>Percentage:</span> ${data.totalStats.mediumPercentage}%</li>
               </ul>
             </div>
 
             <div class="stat-box">
               <h4>Hard Breakdown</h4>
               <ul>
-                <li><span>Total:</span> ${data.totalStats.hardTotal}</li>
                 <li><span>Wins:</span> ${data.totalStats.hardWins}</li>
-                <li><span>Win Percentage:</span> ${data.totalStats.hardPercentage}%</li>
+                <li><span>Total:</span> ${data.totalStats.hardTotal}</li>
+                <li><span>Percentage:</span> ${data.totalStats.hardPercentage}%</li>
               </ul>
             </div>
 
             <div>
               <h2>Category Stats</h2>
               <div class="divider"></div>
-              ${categoryBreakdown}
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th scope="col">Category</th>
+                    <th scope="col">Wins</th>
+                    <th scope="col">Total</th>
+                    <th scope="col">Percentage</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${categoryBreakdown}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -163,27 +175,37 @@ function viewStats(userId) {
 }
 
 //takes a category from playedCategories, gets values from categoryStats
+// function renderCategoryStats(category, categoryStats) {
+//   return `
+//     <div class="stat-box">
+//       <h4>${category}</h4>
+//       <ul>
+//         <li><span>Wins:</span> ${categoryStats[category].wins}</li>
+//         <li><span>Total:</span> ${categoryStats[category].total}</li>
+//         <li><span>Percentage:</span> ${categoryStats[category].winPercentage}%</li>
+//       </ul>
+//     </div>`
+// }
+
 function renderCategoryStats(category, categoryStats) {
   return `
-    <div class="stat-box">
-      <h4>${category}</h4>
-      <ul>
-        <li><span>Total:</span> ${categoryStats[category].total}</li>
-        <li><span>Wins:</span> ${categoryStats[category].wins}</li>
-        <li><span>Win Percentage:</span> ${categoryStats[category].winPercentage}%</li>
-      </ul>
-    </div>`
+    <tr>
+      <td>${category}</td>
+      <td>${categoryStats[category].wins}</td>
+      <td>${categoryStats[category].total}</td>
+      <td>${categoryStats[category].winPercentage}%</td>
+    </tr>`
 }
+
 
 
 // Game Process 1: Render New Game Form
 function newGame() {
-  //createGame()
   roundCounter = 1
   streak = 0
   currentTile.innerHTML = `
   <div id="new-game" class="tile">
-    <img src="img/dino.png" alt="Dino" class="dino">
+    <img src="img/dino.png" alt="Dino" class="dino animated jello">
     <h1>New Game</h1>
     <div class="divider"></div>
     <form id="new-game-form" data-action="new_game" data-id="${currentUser.id}">
@@ -366,10 +388,10 @@ function gameResults() {
     const answeredQuestions = data.rounds.map(question => renderAnsweredQuestion(question)).join("")
     currentTile.innerHTML = `
     <div id="results" class="tile">
-      <img src="img/dino.png" alt="Dino" class="dino">
+      <img src="img/dino.png" alt="Dino" class="dino animated jello">
       <h1>Game Results</h1>
       <div class="divider"></div>
-      <h2 class="score">${Math.round((correctTotal.length/data.rounds.length) * 100)}<span>%</span></h2>
+      <h2 class="score animated jackInTheBox">${Math.round((correctTotal.length/data.rounds.length) * 100)}<span>%</span></h2>
       <div class="row">
         <div class="col">
           <button type="button" class="btn btn-primary" data-user_id="${currentUser.id}" data-action="stats">View Stats</button>
@@ -413,11 +435,10 @@ function renderQuestion(question, roundCounter) {
   questionAnswers.push(question.incorrect_answer_1)
   questionAnswers.push(question.incorrect_answer_2)
   questionAnswers.push(question.incorrect_answer_3)
-  // question.incorrect_answers.forEach(answer => questionAnswers.push(answer))
   shuffle(questionAnswers)
   return `
     <div class="question" data-id="${question.id}">
-      <img src="img/dino.png" alt="Dino" class="dino">
+      <img src="img/dino.png" alt="Dino" class="dino animated jello">
       <h1>Question ${roundCounter}</h1>
       <div class="divider"></div>
       <h3>${question.question}</h3>
@@ -454,29 +475,15 @@ function renderAnsweredQuestion(question) {
   }
 }
 
-// Leaderboard View and Render Rows
 function viewLeaderboard(stat) {
-  fetch("http://localhost:3000/api/v1/users/leaderboard")
+  fetch(`http://localhost:3000/api/v1/users/leaderboard/${stat}`)
   .then(r => r.json())
   .then(data => {
-    switch(stat) {
-      case "elo":
-        userRows = data.elo.map(user => renderLeaderboardRow(user)).join("")
-        break
-      case "wins":
-        userRows = data.wins.map(user => renderLeaderboardRow(user)).join("")
-        break
-      case "total":
-        userRows = data.total.map(user => renderLeaderboardRow(user)).join("")
-        break
-      case "percentage":
-        userRows = data.percentage.map(user => renderLeaderboardRow(user)).join("")
-        break
-    }
+    const userRows = data.map(user => renderLeaderboardRow(user)).join("")
 
     currentTile.innerHTML = `
       <div id="leaderboard" class="tile">
-        <img src="img/dino.png" alt="Dino" class="dino">
+        <img src="img/dino.png" alt="Dino" class="dino animated jello">
         <h1>Leaderboard</h1>
         <div class="divider"></div>
 
@@ -522,7 +529,7 @@ function renderLeaderboardRow(user) {
 function noQuestions() {
   currentTile.innerHTML = `
   <div id="extinct" class="tile">
-    <img src="img/dino.png" alt="Dino" class="dino">
+    <img src="img/dino.png" alt="Dino" class="dino animated jello">
     <h1>Uh Oh</h1>
     <div class="divider"></div>
     <p>The questions for this game are extinct please try again.</p>
