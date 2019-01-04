@@ -429,6 +429,7 @@ function answerQuestion(roundId, answer, correct=false) {
   })
 }
 
+// renders question during game
 function renderQuestion(question, roundCounter) {
   let questionAnswers = []
   questionAnswers.push(question.correct_answer)
@@ -451,6 +452,7 @@ function renderQuestion(question, roundCounter) {
     </div>`
 }
 
+// render question for gameResults()
 function renderAnsweredQuestion(question) {
   if (question.correct) {
     return `
@@ -475,6 +477,7 @@ function renderAnsweredQuestion(question) {
   }
 }
 
+// View Leaderboard
 function viewLeaderboard(stat) {
   fetch(`http://localhost:3000/api/v1/users/leaderboard/${stat}`)
   .then(r => r.json())
@@ -511,6 +514,9 @@ function viewLeaderboard(stat) {
           </tbody>
         </table>
       </div>`
+
+      let dino = document.querySelector("dino")
+      dino.classList.remove("infinite")
   })
 }
 
@@ -525,7 +531,7 @@ function renderLeaderboardRow(user) {
     </tr>`
 }
 
-
+// If API does not return any questions for a game
 function noQuestions() {
   currentTile.innerHTML = `
   <div id="extinct" class="tile">
