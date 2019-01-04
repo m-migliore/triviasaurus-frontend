@@ -80,7 +80,7 @@ function createUser(username) {
       "Accept": "application/json"
     },
     body: JSON.stringify({ username: username })
-  })
+  }) 
   .then(r => r.json())
   .then(data => {
     currentUser = data
