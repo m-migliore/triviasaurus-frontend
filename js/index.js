@@ -27,7 +27,7 @@ currentTile.addEventListener("click", e => {
   }
 })
 
-// 1. User Login/Signup Form
+// User Login/Signup Form
 loginForm.addEventListener("submit", e => {
   e.preventDefault()
   const username = loginForm.querySelector("#username").value
@@ -50,7 +50,7 @@ loginForm.addEventListener("submit", e => {
 })
 
 
-// Post login for user, play game or view stats
+// Post login for user, play game, view stats, or view leaderboard
 function postLogin() {
   currentTile.innerHTML = `
   <div id="user" class="tile">
@@ -174,19 +174,7 @@ function viewStats(userId) {
 
 }
 
-//takes a category from playedCategories, gets values from categoryStats
-// function renderCategoryStats(category, categoryStats) {
-//   return `
-//     <div class="stat-box">
-//       <h4>${category}</h4>
-//       <ul>
-//         <li><span>Wins:</span> ${categoryStats[category].wins}</li>
-//         <li><span>Total:</span> ${categoryStats[category].total}</li>
-//         <li><span>Percentage:</span> ${categoryStats[category].winPercentage}%</li>
-//       </ul>
-//     </div>`
-// }
-
+// Render rows for category table
 function renderCategoryStats(category, categoryStats) {
   return `
     <tr>
@@ -263,12 +251,29 @@ function newGame() {
   </div>`
 }
 
+// Game Process 2: Take new game form values for create rounds for game
 function loadGame() {
   createGame()
   addRounds()
 }
 
-// Game Process 2: Take new game form values for create rounds for game
+// Create Game in AR, set currentGame variable
+function createGame() {
+  fetch("http://localhost:3000/api/v1/games", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    },
+    body: JSON.stringify({ user_id: currentUser.id})
+  })
+  .then(r => r.json())
+  .then(data => {
+    currentGame = data
+  })
+}
+
+// Add rounds to created game
 function addRounds() {
   const questionAmount = currentTile.querySelector("#question-amount").value
   const gameDifficultyValue = currentTile.querySelector("#game-difficulty").value
@@ -307,22 +312,7 @@ function addRounds() {
   })
 }
 
-// Create Game in AR, set currentGame variable
-function createGame() {
-  fetch("http://localhost:3000/api/v1/games", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Accept": "application/json"
-    },
-    body: JSON.stringify({ user_id: currentUser.id})
-  })
-  .then(r => r.json())
-  .then(data => {
-    currentGame = data
-  })
-}
-
+// Render round for game
 function createRound(question) {
   currentTile.innerHTML = ""
 
@@ -391,7 +381,7 @@ function gameResults() {
       <img src="img/dino.png" alt="Dino" class="dino animated jello">
       <h1>Game Results</h1>
       <div class="divider"></div>
-      <h2 class="score animated jackInTheBox">${Math.round((correctTotal.length/data.rounds.length) * 100)}<span>%</span></h2>
+      <h2 class="score animated jackInTheBox">Your Score: ${Math.round((correctTotal.length/data.rounds.length) * 100)}<span>%</span></h2>
       <div class="row">
         <div class="col">
           <button type="button" class="btn btn-primary" data-user_id="${currentUser.id}" data-action="stats">View Stats</button>
@@ -514,9 +504,6 @@ function viewLeaderboard(stat) {
           </tbody>
         </table>
       </div>`
-
-      let dino = document.querySelector("dino")
-      dino.classList.remove("infinite")
   })
 }
 
