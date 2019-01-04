@@ -1,14 +1,9 @@
-// console.log("sup");
-//
-// const welcomeUser = document.getElementById("current-user")
-
 const currentTile = document.getElementById("current-tile")
 const welcome = document.getElementById("welcome")
 const loginForm = document.getElementById("login-form")
 
 let currentUser
 let currentGame
-let currentRound
 let gameQuestions = []
 let streak = 0
 let roundCounter = 1
@@ -21,11 +16,15 @@ currentTile.addEventListener("click", e => {
   } else if (e.target.dataset.action === "stats") {
     viewStats(e.target.dataset.user_id)
   } else if (e.target.dataset.action === "start_game") {
+    e.target.setAttribute("disabled", true)
     loadGame()
   } else if (e.target.dataset.action === "answer") {
     checkAnswer(e.target.dataset.id, e.target.innerText)
   } else if (e.target.dataset.action === "leaderboard") {
-    viewLeaderboard()
+    viewLeaderboard("elo")
+  } else if (e.target.dataset.action === "switch") {
+    console.log(e.target.dataset.leaderboard)
+    viewLeaderboard(e.target.dataset.leaderboard)
   }
 })
 
@@ -107,6 +106,8 @@ function viewStats(userId) {
         <div class="row">
           <div class="col">
             <button type="button" class="btn btn-primary" data-action="play">Play Game</button>
+          </div>
+          <div class="col">
             <button type="button" class="btn btn-primary" data-action="leaderboard">View Leaderboard</button>
           </div>
         </div>
@@ -179,7 +180,7 @@ function renderCategoryStats(category, categoryStats) {
 function newGame() {
   //createGame()
   roundCounter = 1
-
+  streak = 0
   currentTile.innerHTML = `
   <div id="new-game" class="tile">
     <img src="img/dino.png" alt="Dino" class="dino">
@@ -276,7 +277,11 @@ function addRounds() {
     return gameQuestions
   })
   .then(gameQuestions => {
-    loadRound()
+    if (gameQuestions.length > 0) {
+      loadRound()
+    } else {
+      noQuestions()
+    }
   })
 }
 
@@ -341,8 +346,10 @@ function checkAnswer(roundId, answer) {
   fetch(`http://localhost:3000/api/v1/rounds/${roundId}`)
   .then(r => r.json())
   .then(data => {
-    if (data.correct_answer.trim() === answer.trim()) {
+    if (data.correct_answer.replace(/ /g,'') === answer.replace(/ /g,'')) {
       answerQuestion(roundId, answer, true)
+      streak++
+      console.log(streak)
     } else {
       answerQuestion(roundId, answer)
     }
@@ -382,7 +389,6 @@ function gameResults() {
 
 //specify true if correct when checking answer
 function answerQuestion(roundId, answer, correct=false) {
-  console.log(roundId, answer, correct);
   fetch(`http://localhost:3000/api/v1/rounds/${roundId}`, {
     method: "PATCH",
     headers: {
@@ -449,11 +455,24 @@ function renderAnsweredQuestion(question) {
 }
 
 // Leaderboard View and Render Rows
-function viewLeaderboard() {
+function viewLeaderboard(stat) {
   fetch("http://localhost:3000/api/v1/users/leaderboard")
   .then(r => r.json())
   .then(data => {
-    const userRows = data.map(user => renderLeaderboardRow(user)).join("")
+    switch(stat) {
+      case "elo":
+        userRows = data.elo.map(user => renderLeaderboardRow(user)).join("")
+        break
+      case "wins":
+        userRows = data.wins.map(user => renderLeaderboardRow(user)).join("")
+        break
+      case "total":
+        userRows = data.total.map(user => renderLeaderboardRow(user)).join("")
+        break
+      case "percentage":
+        userRows = data.percentage.map(user => renderLeaderboardRow(user)).join("")
+        break
+    }
 
     currentTile.innerHTML = `
       <div id="leaderboard" class="tile">
@@ -474,10 +493,10 @@ function viewLeaderboard() {
           <thead>
             <tr>
               <th scope="col">Username</th>
-              <th scope="col">Wins</th>
-              <th scope="col">Total</th>
-              <th scope="col">Percentage</th>
-              <th scope="col">ELO</th>
+              <th scope="col" data-action="switch" data-leaderboard="wins">Wins</th>
+              <th scope="col" data-action="switch" data-leaderboard="total">Total</th>
+              <th scope="col" data-action="switch" data-leaderboard="percentage">Percentage</th>
+              <th scope="col" data-action="switch" data-leaderboard="elo">ELO</th>
             </tr>
           </thead>
           <tbody>
@@ -497,6 +516,28 @@ function renderLeaderboardRow(user) {
       <td>${user.winPercentage}%</td>
       <td>${user.elo}</td>
     </tr>`
+}
+
+
+function noQuestions() {
+  currentTile.innerHTML = `
+  <div id="extinct" class="tile">
+    <img src="img/dino.png" alt="Dino" class="dino">
+    <h1>Uh Oh</h1>
+    <div class="divider"></div>
+    <p>The questions for this game are extinct please try again.</p>
+    <div class="row">
+      <div class="col">
+        <button type="button" class="btn btn-primary" data-user_id="${currentUser.id}" data-action="stats">View Stats</button>
+      </div>
+      <div class="col">
+        <button type="button" class="btn btn-primary" data-action="play">Play Game</button>
+      </div>
+      <div class="col">
+        <button type="button" class="btn btn-primary" data-action="leaderboard">View Leaderboard</button>
+      </div>
+    </div>
+  </div>`
 }
 
 // Fisher-Yates Shuffle
